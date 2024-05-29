@@ -1,0 +1,22 @@
+# mamba4rec settings
+hidden_size: 64                 # (int) Number of features in the hidden state.
+num_layers: 2               # (int) Number of Mamba layers.
+dropout_prob: 0.4            # (float) Dropout rate.
+
+d_state: 64                     # (int) SSM state expansion factor
+d_conv: 4                       # (int) Local convolution width
+expand: 2                       # (int) Block expansion factor
+
+root_path: ./dataset/amazon/processed/Beauty
+MAX_ITEM_LIST_LENGTH: 50
+
+# training settings
+epochs: 300
+batch_size: 2048
+learning_rate: 0.001
+weight_decay: 0.0
+top_k: 10
+logger_name: Mamba4Rec
+
+model_saved_path: ./weight
+model_saved_name: 'Mamba4Rec_best_epoch.pth'

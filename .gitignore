@@ -1,0 +1,4 @@
+/dataset/amazon/processed/
+/dataset/amazon/raw/
+!/dataset/amazon/processed/tmp
+!/dataset/amazon/raw/tmp
