@@ -19,4 +19,4 @@ top_k: 10
 logger_name: Mamba4Rec
 
 model_saved_path: ./weight
-model_saved_name: 'Mamba4Rec_best_epoch.pth'
+model_saved_name: 'Mamba4Rec_best_epoch_model.pth'

@@ -38,9 +38,9 @@ class AmazonDataset(Dataset):
         # 生成padding_mask
         if len(item_seq) > self.max_len:
             padding_mask = torch.ones(self.max_len) == 0
-            label = item_seq[self.max_len]
-            time_stamps = time_stamps[:self.max_len]
-            item_seq = item_seq[:self.max_len]
+            label = item_seq[-1]
+            time_stamps = time_stamps[-(self.max_len + 1): -1]
+            item_seq = item_seq[-(self.max_len + 1): -1]
             length = self.max_len
         else:
             label = item_seq.pop()
