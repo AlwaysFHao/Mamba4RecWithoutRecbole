@@ -5,9 +5,11 @@ import logging
 
 import math
 
-import numpy as np
 import torch
 
+"""
+The implementation of the evaluation index part refers to TiCoSeRec: https://github.com/KingGugu/TiCoSeRec
+"""
 
 def setting_logging(log_name):
     """
