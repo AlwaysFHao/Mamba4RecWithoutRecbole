@@ -11,6 +11,7 @@ import torch
 The implementation of the evaluation index part refers to TiCoSeRec: https://github.com/KingGugu/TiCoSeRec
 """
 
+
 def setting_logging(log_name):
     """
     设置日志
@@ -78,4 +79,3 @@ def get_full_sort_score(answers, pred_list, topk):
     recall = recall_at_k(answers, pred_list, topk)
     ndcg = ndcg_k(answers, pred_list, topk)
     return recall, ndcg
-

@@ -40,14 +40,46 @@ Mamba4Rec论文bibtex引用如下：
 - Pytorch >= 1.12.1 （本案例使用torch-2.3.0）
 - jsonlines == 2.0.0
 - Mamba （如遇安装问题，可参考：[https://github.com/AlwaysFHao/Mamba-Install](https://github.com/AlwaysFHao/Mamba-Install) ）
-  - causal_conv1d >= 1.2.0 （本案例使用causal_conv1d-1.2.0）
+  - causal_conv1d >= 1.2.0 （非必须，可用Conv1d加Padding方式平替，本案例使用causal_conv1d-1.2.0）
   - mamba_ssm >= 1.2.0 （本案例使用mamba_ssm-1.2.0）
 ---
 ## 数据集准备
-努力编写ing，请等待更新...
+本仓库提供了Amazon Review 2014 数据集（官网：[https://jmcauley.ucsd.edu/data/amazon/index_2014.html](https://jmcauley.ucsd.edu/data/amazon/index_2014.html)）的预处理方法，
+但官网现在无法下载商品元数据，替代方案是访问：[https://jmcauley.ucsd.edu/data/amazon/links.html](https://jmcauley.ucsd.edu/data/amazon/links.html)，如遇自动跳转2018数据集，请多次尝试返回，停止页面自动请求转发。
+之后找到想要下载的数据集后，分别下载对应的`ratings_{Name}.csv`以及`meta_{Name}.json.gz`文件。
+### Beauty数据集为例
+- `ratings_Beauty.csv`：在界面中找到对应的文件并下载，对应下载链接为：[http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Beauty.csv](http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Beauty.csv)
+  <p align="center">
+    <img src="assert/download_ratings_only.png" alt="download_ratings_only"/>
+  </p>
+
+- `meta_Beauty.json.gz`：在界面中找到对应的文件并下载，对应下载链接为：[http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Beauty.json.gz](http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Beauty.json.gz)
+  <p align="center">
+    <img src="assert/download_metadata.png" alt="download_metadata"/>
+  </p>
+下载完成后，在`📁 dataset\amazon\raw\`下新建`📁 Beauty`，将`ratings_Beauty.csv`和`meta_Beauty.json.gz`放入`📁 dataset\amazon\raw\Beauty`中即可，
+其他分类的下载也参考以上步骤。
 
 ---
 ## 项目结构介绍
+- `📁 assert`：存放Readme文档的图片；
+- `📁 dataset`：存放各类数据集以及数据集预处理文件：
+  - `📁 amazon`：亚马逊数据集以及对应预处理文件：
+    - `📁 preprocess`：存放数据预处理文件：
+      - `process_item.py`：数据预处理脚本，可自动扫描`📁 raw`下的子类别原始数据并处理；
+      - `utils.py`：数据预处理工具函数等；
+    - `📁 processed`：预处理完的数据集文件：
+      - `📁 Beauty`：Beauty数据集的预处理文件：
+        - `train_seq.jsonl`：训练集子序列；
+        - `eval_seq.jsonl`：验证集子序列；
+        - `test_seq.jsonl`：测试集子序列；
+        - `item2id.jsonl`：原始item id到新id的映射；
+        - `user2id.jsonl`：原始user id到新id的映射；
+    - `📁 raw`：原始未处理数据，按照子类别划分：
+      - `📁 Beauty`：Beauty数据集的原始未处理文件：
+        - `ratings_Beauty.csv`：交互数据；
+        - `meta_Beauty.json.gz`：商品元数据；
+        - 
 努力编写ing，请等待更新...
 
 ---
