@@ -22,7 +22,9 @@ if __name__ == '__main__':
     with open(config_yaml_file_path, 'r') as stream:
         config = yaml.safe_load(stream)
 
-    device = (torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
+    if torch.cuda.is_available() is False:
+        raise EnvironmentError('没有可用GPU，Mamba当前仅支持CUDA运行！')
+    device = torch.device("cuda")
 
     hidden_size = config['hidden_size']
     num_layers = config['num_layers']

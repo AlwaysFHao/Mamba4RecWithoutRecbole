@@ -68,21 +68,123 @@ Mamba4Rec论文bibtex引用如下：
     - `📁 preprocess`：存放数据预处理文件：
       - `process_item.py`：数据预处理脚本，可自动扫描`📁 raw`下的子类别原始数据并处理；
       - `utils.py`：数据预处理工具函数等；
-    - `📁 processed`：预处理完的数据集文件：
+    - `📁 processed`：预处理完的数据集文件（以处理完的Beauty数据集为例）：
       - `📁 Beauty`：Beauty数据集的预处理文件：
         - `train_seq.jsonl`：训练集子序列；
         - `eval_seq.jsonl`：验证集子序列；
         - `test_seq.jsonl`：测试集子序列；
         - `item2id.jsonl`：原始item id到新id的映射；
         - `user2id.jsonl`：原始user id到新id的映射；
-    - `📁 raw`：原始未处理数据，按照子类别划分：
+    - `📁 raw`：原始未处理数据，按照子类别划分（以Beauty数据集为例）：
       - `📁 Beauty`：Beauty数据集的原始未处理文件：
         - `ratings_Beauty.csv`：交互数据；
         - `meta_Beauty.json.gz`：商品元数据；
-        - 
-努力编写ing，请等待更新...
+- `📁 weight`：用于存放权重文件：
+  - `Mamba4Rec_best_epoch_model.pth`：hit最好的一轮权重；
+  - `Mamba4Rec_last_epoch_model.pth`：最后一轮权重；
+- `config.yaml`：配置文件；
+- `dataloader.py`：数据集定义；
+- `mamba4rec.py`：实现了MambaBlock以及Mamba4Rec的模型结构，全英文注释；
+- `test.py`：模型测试脚本，模型训练完成后调用该脚本，测试模型在测试集上的Hit以及NDCG效果；
+- `train.py`：模型训练脚本，每轮训练都会进行交叉验证，最后以验证集Hit效果最好的一轮模型进行保存；
+- `utils.py`：各类工具函数。
 
 ---
 ## Usage
-努力编写ing，请等待更新...
+本章节将给出主要模块的介绍与使用方法。
+
+### 数据集加载
+涉及Amazon数据集的预处理以及模型训练、预测时的批数据加载；
+#### Amazon数据集预处理
+完成[数据集准备](#数据集准备)之后，直接运行`📁 dataset/amazon/preprocess/`下的[process_item.py](dataset/amazon/preprocess/process_item.py)，即可自动开始预处理Amazon数据集。
+```shell
+cd dataset/amazon/preprocess
+python process_item.py
+cd ../../../
+```
+处理完成后，会在`📁 dataset/amazon/processed/`文件夹下出现对应类别预处理好的数据集文件，详细内容请参考[项目结构介绍](#项目结构介绍)。
+#### Amazon数据集批加载
+模型训练以及预测时，数据集加载主要通过[dataloader.py](dataloader.py)中的`AmazonDataSet`类实现，可用如下代码进行测试：
+```python
+from dataloader import AmazonDataset
+from torch.utils.data import DataLoader
+dataset = AmazonDataset(root_path='dataset/amazon/processed/Beauty', max_len=50, split='train')
+dataloader = DataLoader(dataset, batch_size=2, shuffle=False, drop_last=False)
+for i, data in enumerate(dataloader):
+    print(data)
+```
+
+### 模型
+主要重构了MambaBlock以及Mamba4Rec两个模块，下面将给出介绍以及使用方法。
+#### MambaBlock
+MambaBlock位于[mamba4rec.py](mamba4rec.py)内的`MambaBlock`类，基于Mamba源码 `mamba_simple.py`内的 `Mamba`类进行重构，官方包导入路径为：
+```python
+from mamba_ssm import Mamba
+```
+官方Mamba实现中，设置了两条路径，分别是 `mamba_inner_fn`函数与 `causal_conv1d_fn`（可用Conv1d + padding平替）、`selective_scan_fn`函数，
+这两条路径本质上是等价的，这里为了可阅读性选择后一条路径进行重构。
+
+本仓库将Mamba大部分冗余操作进行简化，同时给出详细注释，如想测试该模块，可使用如下代码：
+```python
+import torch
+from mamba4rec import MambaBlock
+if torch.cuda.is_available() is False:
+  raise EnvironmentError('没有可用GPU，Mamba当前仅支持CUDA运行！')
+device = torch.device("cuda")
+model = MambaBlock(
+    d_model=64,
+    d_state=256,
+    d_conv=4,
+    expand=2
+).to(device)
+input_tensor = torch.randn(2, 10, 64).to(device)
+out_tensor = model(input_tensor)
+print(out_tensor.shape)
+```
+最后应当输出：
+```
+torch.Size([2, 10, 64])
+```
+
+#### Mamba4Rec
+Mamba4Rec模块位于[mamba4rec.py](mamba4rec.py)内的 `Mmaba4Rec`类，参考Mamba4Rec官方源码以及Recbole序列推荐模型官方源码进行实现，
+无需Recbole环境。可用以下代码进行测试使用：
+```python
+import torch
+from mamba4rec import Mamba4Rec
+if torch.cuda.is_available() is False:
+    raise EnvironmentError('没有可用GPU，Mamba当前仅支持CUDA运行！')
+device = torch.device("cuda")
+model = Mamba4Rec(
+    items_num=1000,
+    hidden_size=64,
+    d_state=256,
+    d_conv=4,
+    expand=2,
+    num_layers=2,
+    dropout_prob=0.2
+).to(device)
+input_tensor = torch.randint(low=1, high=999, size=(2, 10), dtype=torch.long).to(device)
+length_tensor = torch.ones((2,), dtype=torch.long).to(device)
+out_tensor = model(input_tensor, length_tensor)
+print(out_tensor.shape)
+```
+最后应当输出：
+```
+torch.Size([2, 64])
+```
+
+## 模型训练
+完成[Amazon数据集预处理](#amazon数据集预处理)后，将[config.yaml](config.yaml)配置按照自己所需修改，然后在项目根目录运行[train.py](train.py)即可：
+```shell
+python train.py
+```
+模型训练会自动按照验证集最好的一轮Hit指标进行保存，最后模型权重会保存在 `📁 weight`下（注意模型权重文件名，可以在[config.yaml](config.yaml)自定义）。如发现多轮模型指标未提升，可手动停止训练。
+## 模型测试
+完成[模型训练](#模型训练)后，确定已有模型权重保存至 `📁 weight`下，然后在项目根目录运行[test.py](test.py)即可：
+```shell
+python test.py
+```
+最后tqdm进度条显示的 `hit_mean`以及 `ndcg_mean`即为模型在测试集上性能指标。
+
 

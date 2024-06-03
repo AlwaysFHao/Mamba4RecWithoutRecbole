@@ -342,15 +342,24 @@ class FeedForward(nn.Module):
 
 
 if __name__ == '__main__':
-    model = MambaLayer(
-        # This module uses roughly 3 * expand * d_model^2 parameters
+    if torch.cuda.is_available() is False:
+        raise EnvironmentError('没有可用GPU，Mamba当前仅支持CUDA运行！')
+    device = torch.device("cuda")
+    model = MambaBlock(
         d_model=64,
         d_state=256,
         d_conv=4,
-        expand=2,
-        dropout=0.2,
-        num_layers=1
-    ).to(torch.device('cuda'))
-    input_tensor = torch.randn(2, 10, 64).to(torch.device('cuda'))
+        expand=2
+    ).to(device)
+    # model = MambaLayer(
+    #     # This module uses roughly 3 * expand * d_model^2 parameters
+    #     d_model=64,
+    #     d_state=256,
+    #     d_conv=4,
+    #     expand=2,
+    #     dropout=0.2,
+    #     num_layers=1
+    # ).to(device)
+    input_tensor = torch.randn(2, 10, 64).to(device)
     out_tensor = model(input_tensor)
     print(out_tensor.shape)

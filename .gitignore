@@ -3,3 +3,4 @@
 /weight
 !/dataset/amazon/processed/tmp
 !/dataset/amazon/raw/tmp
+!/weight/tmp
